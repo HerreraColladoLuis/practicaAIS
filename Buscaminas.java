@@ -130,7 +130,9 @@ public class Buscaminas extends JFrame implements Runnable, ActionListener, Mous
         guesses = new int [n+2][m+2];
         mines = new int[n+2][m+2];
         b = new JButton [n][m];
+        /* Añadimos una fila más para poner el tiempo y las minas restantes */
         setLayout(new GridLayout(n+1,m));
+        /**/
         
         for (int y = 0;y<m+2;y++)
         {
@@ -275,7 +277,7 @@ public class Buscaminas extends JFrame implements Runnable, ActionListener, Mous
     private void detener_crono()
     {
     	this.crono_activo = false;
-    	this.proceso_cronometro.stop();
+    	this.proceso_cronometro.interrupt();
     }
     /**/
     
@@ -630,16 +632,18 @@ public class Buscaminas extends JFrame implements Runnable, ActionListener, Mous
 	/* Módulo para guardar y cargar partidas en ficheros */
 	public void guardar_partida() throws NotSerializableException
 	{
+		
 		aux = 1;
 		File fichero_padre = new File(this.ruta_guardar);
+		fichero_padre.mkdirs();
 		for (File archivo : fichero_padre.listFiles()) // Comprobamos cuantas partidas hay guardadas
 			aux++;
-
+		
 		ObjectOutputStream archivo;
 		try 
 		{
 			this.detener_crono();
-			archivo = new ObjectOutputStream(new FileOutputStream(this.ruta_guardar + "/Partida " + String.valueOf(aux) + ".dat"));
+			archivo = new ObjectOutputStream(new FileOutputStream(this.ruta_guardar + "/Partida_"+ String.valueOf(aux) + ".dat"));
 			archivo.writeObject(this);
 			archivo.close();
 		} 
@@ -683,6 +687,7 @@ public class Buscaminas extends JFrame implements Runnable, ActionListener, Mous
 	{
 		aux = 1;
 		File fichero_padre = new File(this.ruta_estadisticas);
+		fichero_padre.mkdirs();
 		for (File archivo : fichero_padre.listFiles()) // Comprobamos cuantas partidas hay guardadas
 			aux++;
 		
@@ -693,13 +698,13 @@ public class Buscaminas extends JFrame implements Runnable, ActionListener, Mous
         	Date date = new Date();
         	DateFormat hourdateFormat = new SimpleDateFormat("HH:mm:ss dd/MM/yyyy");
         	
-            fichero = new FileWriter(this.ruta_estadisticas + "/Partida " + String.valueOf(aux) + ".txt");
+            fichero = new FileWriter(this.ruta_estadisticas + "/Partida_" + String.valueOf(aux) + ".txt");
             pw = new PrintWriter(fichero);
             
             pw.println("Nombre: " + this.nombre_jugador);
             pw.println("Fecha: " + hourdateFormat.format(date));
             pw.println();
-            pw.println("Tiempo: " + String.valueOf((int)((endtime-starttime)/1000000000)));
+            pw.println("Tiempo: " + String.valueOf((int)((endtime-starttime)/1000000000)) + " segundos");
             pw.println("Minas: " + String.valueOf(this.nomines));
             pw.println("Filas: " + String.valueOf(this.n));
             pw.println("Columnas: " + String.valueOf(this.m));
@@ -805,6 +810,9 @@ public class Buscaminas extends JFrame implements Runnable, ActionListener, Mous
             {
             	this.guardar_estadisticas();
             }
+            
+            this.dispose();
+            new Buscaminas(40,16,16); // Empezamos una partida por defecto
             /**/
         }
     }
