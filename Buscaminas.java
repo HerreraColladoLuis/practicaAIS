@@ -630,6 +630,10 @@ public class Buscaminas extends JFrame implements Runnable, ActionListener, Mous
 	/**/
 	
 	/* Módulo para guardar y cargar partidas en ficheros */
+	/* PROBLEMA ENCONTRADO: a la hora de serializar la instancia de la clase buscaminas que queremos guardar en 
+	 * el disco nos ha saltado una excepción de que un objeto no es serializable. Aún así, guarda el archivo .dat
+	 * en el directorio indicado, pero cuando el usuario intenta cargar la partida el programa no lo permite por 
+	 * el problema anterior. */
 	public void guardar_partida() throws NotSerializableException
 	{
 		
