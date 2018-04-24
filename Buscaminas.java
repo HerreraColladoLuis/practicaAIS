@@ -21,25 +21,25 @@ import javax.swing.*;
 import javax.swing.border.Border;
 import javax.swing.border.TitledBorder;
 
-/* ACLARACIONES SOBRE EL CÃ“DIGO AÃ‘ADIDO
-Las implementaciones aÃ±adidas irÃ¡n comentadas mediante un comentario multilinea, 
-poniendo una linea antes la explicaciÃ³n de dicho cÃ³digo y una linea sin comentar 
+/* ACLARACIONES SOBRE EL CÓDIGO AÑADIDO
+Las implementaciones añadidas irán comentadas mediante un comentario multilinea, 
+poniendo una linea antes la explicación de dicho código y una linea sin comentar 
 al finalizar */
 
 public class Buscaminas extends JFrame implements Runnable, ActionListener, MouseListener, Serializable
 {
     int nomines;
     
-    /* AÃ±adimos las variables que vamos a necesitar para las mejoras */
-    private int rem_mines, milesimas = 0, segundos = 0, seleccionado, seleccionado2, aux, minas, filas, columnas; 
-    private JMenuBar menu; // Variable para el menÃº
-    private JMenu m_juego, m_ayuda; // MenÃº para la pestaÃ±a 'juego' y 'ayuda'
-    private JMenuItem m_nuevo, m_stats, m_opc, m_salir, m_guardar, m_cargar; // Items del menÃº juego
-    private JFrame f_stats, f_opc; // Ventanas para las estadÃ­sticas y para las opciones
+    /* Añadimos las variables que vamos a necesitar para las mejoras */
+    int rem_mines, milesimas = 0, segundos = 0, seleccionado, seleccionado2, aux, minas, filas, columnas; 
+    private JMenuBar menu; // Variable para el menú
+    private JMenu m_juego, m_ayuda; // Menú para la pestaña 'juego' y 'ayuda'
+    private JMenuItem m_nuevo, m_stats, m_opc, m_salir, m_guardar, m_cargar; // Items del menú juego
+    private JFrame f_stats, f_opc; // Ventanas para las estadísticas y para las opciones
     private JRadioButton b_principiante, b_intermedio, b_experto, b_pers; // Botones para elegir la dificultad del juego
     private ButtonGroup grupo; // Grupo de botones para los radiobutton
-    private JPanel panel_botones, panel_pers; // Panel que contendrÃ¡ los botones radiobutton y panel para personalizado
-    private JTextArea e_prin, e_inter, e_exp; // Etiquetas para los distintos tipos de juego
+    private JPanel panel_botones, panel_pers; // Panel que contendrá los botones radiobutton y panel para personalizado
+    private JTextArea e_prin, e_inter, e_exp, e_est; // Etiquetas para los distintos tipos de juego
     private JLabel l_filas, l_columnas, l_minas, l_rem_mines, t_rem_mines, l_time, t_time;
     private JTextField t_filas, t_columnas, t_minas;
     private JButton b_aceptar, b_cancelar;
@@ -48,7 +48,7 @@ public class Buscaminas extends JFrame implements Runnable, ActionListener, Mous
     private Thread proceso_cronometro; // Hilo para correr el contador de segundos
     private Boolean crono_activo;
     private String[] opciones ={"Empezar de nuevo", "Salir"};
-    private String[] opciones2 = {"SÃ­","No"};
+    private String[] opciones2 = {"Sí","No"};
     /**/ 
     
     int perm[][];
@@ -79,7 +79,7 @@ public class Buscaminas extends JFrame implements Runnable, ActionListener, Mous
     	
         this.setDefaultCloseOperation(EXIT_ON_CLOSE);
         
-        /* InicializaciÃ³n del menÃº */
+        /* Inicialización del menú */
         menu = new JMenuBar();
         this.setJMenuBar(menu);
         
@@ -130,7 +130,7 @@ public class Buscaminas extends JFrame implements Runnable, ActionListener, Mous
         guesses = new int [n+2][m+2];
         mines = new int[n+2][m+2];
         b = new JButton [n][m];
-        /* AÃ±adimos una fila mÃ¡s para poner el tiempo y las minas restantes */
+        /* Añadimos una fila más para poner el tiempo y las minas restantes */
         setLayout(new GridLayout(n+1,m));
         /**/
         
@@ -228,7 +228,7 @@ public class Buscaminas extends JFrame implements Runnable, ActionListener, Mous
         this.iniciar_crono(); 
         /**/
         
-        /* Colocamos el frame principal en medio de la pantalla, le ponemos tÃ­tulo y evitamos que se pueda agrandar*/
+        /* Colocamos el frame principal en medio de la pantalla, le ponemos título y evitamos que se pueda agrandar*/
         this.setTitle("Buscaminas AIS");
         this.setLocationRelativeTo(null);
         this.setResizable(false);
@@ -281,7 +281,7 @@ public class Buscaminas extends JFrame implements Runnable, ActionListener, Mous
     }
     /**/
     
-	/* MÃ©todo para habilitar el frame principal */
+	/* Método para habilitar el frame principal */
     public void cerrando_ventana()
     {
     	this.iniciar_crono();
@@ -292,7 +292,7 @@ public class Buscaminas extends JFrame implements Runnable, ActionListener, Mous
     
     public void actionPerformed(ActionEvent e)
     {
-    	/* Comprobamos quÃ© acciÃ³n estÃ¡ llevando a cabo el usuario */
+    	/* Comprobamos qué acción está llevando a cabo el usuario */
     	if (e.getSource() == m_nuevo)
     	{
     		minas = this.nomines;
@@ -304,15 +304,25 @@ public class Buscaminas extends JFrame implements Runnable, ActionListener, Mous
     	else if (e.getSource() == m_stats)
     	{
     		this.detener_crono();
-    		this.f_stats = new JFrame("EstadÃ­sticas");
+    		this.f_stats = new JFrame("Estadísticas");
     		f_stats.setSize(400, 400);
     		f_stats.setResizable(false);
     		f_stats.setLocationRelativeTo(this);
     		f_stats.setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
-    		f_stats.setVisible(true);
     		this.setEnabled(false);
     		
-    		// AÃ±adimos un listener al frame de estadÃ­sticas para que cuando se cierre habilitar el frame principal
+    		this.e_est = new JTextArea();
+    		String texto = this.get_texto_est();
+    		e_est.setText(texto);
+    		e_est.setEditable(false);
+    		
+    		JScrollPane scroll = new JScrollPane (e_est, 
+    				   JScrollPane.VERTICAL_SCROLLBAR_ALWAYS, JScrollPane.HORIZONTAL_SCROLLBAR_ALWAYS);
+
+    		f_stats.add(scroll);
+    		f_stats.setVisible(true);
+    		
+    		// Añadimos un listener al frame de estadísticas para que cuando se cierre habilitar el frame principal
     		f_stats.addWindowListener(new WindowAdapter()
     				{
     					@Override
@@ -449,7 +459,7 @@ public class Buscaminas extends JFrame implements Runnable, ActionListener, Mous
     		f_opc.setVisible(true);
     		this.setEnabled(false);
     		
-    		// AÃ±adimos un listener al frame de opciones para que cuando se cierre habilitar el frame principal
+    		// Añadimos un listener al frame de opciones para que cuando se cierre habilitar el frame principal
     		f_opc.addWindowListener(new WindowAdapter()
     				{
     					@Override
@@ -523,7 +533,7 @@ public class Buscaminas extends JFrame implements Runnable, ActionListener, Mous
 	        	this.b[row][column].setText("*");
 	        	/**/
 	        	
-	        	/* Cambiamos el mensaje de juego finalizado y aÃ±adimos la opciÃ³n de reiniciar */
+	        	/* Cambiamos el mensaje de juego finalizado y añadimos la opción de reiniciar */
 	        	//JOptionPane.showMessageDialog(temporaryLostComponent, "You set off a Mine!!!!."); 
 	        	this.detener_crono();
 	        	seleccionado = JOptionPane.showOptionDialog(null, "Has encontrado una mina.","Juego finalizado",JOptionPane.DEFAULT_OPTION,JOptionPane.ERROR_MESSAGE,null,opciones,opciones[0]);
@@ -552,14 +562,14 @@ public class Buscaminas extends JFrame implements Runnable, ActionListener, Mous
 	            if (perm[row][column] == 0)
 	            {
 	            	
-	            	/* Ponemos el botÃ³n en blanco */
+	            	/* Ponemos el botón en blanco */
 	            	this.b[row][column].setBackground(Color.WHITE);
 	            	/**/
 	            	
 	            	tmp = " ";
 	            }
 	            
-	            /* Ponemos el botÃ³n en blanco */
+	            /* Ponemos el botón en blanco */
 	            this.b[row][column].setBackground(Color.WHITE);
 	            /**/
 	            
@@ -575,7 +585,7 @@ public class Buscaminas extends JFrame implements Runnable, ActionListener, Mous
     	}
     }
     
-    protected void set_setup() {
+	protected void set_setup() {
     	if (this.b_principiante.isSelected())
     		this.setup_principiante();
     	else if (this.b_intermedio.isSelected())
@@ -586,7 +596,7 @@ public class Buscaminas extends JFrame implements Runnable, ActionListener, Mous
     		this.setup_personalizado();
 	}
 
-	/* MÃ©todos para poner las configuraciÃ³n que quiera el usuario */
+	/* Métodos para poner las configuración que quiera el usuario */
     private void setup_personalizado() {
 		this.dispose();
 		try 
@@ -629,26 +639,36 @@ public class Buscaminas extends JFrame implements Runnable, ActionListener, Mous
 	}
 	/**/
 	
-	/* MÃ³dulo para guardar y cargar partidas en ficheros */
-	/* PROBLEMA ENCONTRADO: a la hora de serializar la instancia de la clase buscaminas que queremos guardar en 
-	 * el disco nos ha saltado una excepciÃ³n de que un objeto no es serializable. AÃºn asÃ­, guarda el archivo .dat
-	 * en el directorio indicado, pero cuando el usuario intenta cargar la partida el programa no lo permite por 
-	 * el problema anterior. */
+	/* Módulo para guardar y cargar partidas en ficheros */
 	public void guardar_partida() throws NotSerializableException
-	{
+	{     
+	    String _b[][] = new String[this.n][this.m]; // En vez de una matriz de jbuttons, guardaremos una matriz de strings 
+	    for (int i = 0; i < this.n; i++)
+	    	for (int j = 0; j < this.m; j++)
+	    		_b[i][j] = this.b[i][j].getText();
 		
 		aux = 1;
 		File fichero_padre = new File(this.ruta_guardar);
 		fichero_padre.mkdirs();
-		for (File archivo : fichero_padre.listFiles()) // Comprobamos cuantas partidas hay guardadas
+		// Recorremos el directorio donde se guardan las partidas para saber qué número de partida se guarda
+		for (File arch : fichero_padre.listFiles()) 
 			aux++;
 		
 		ObjectOutputStream archivo;
 		try 
 		{
-			this.detener_crono();
+			//this.detener_crono();
 			archivo = new ObjectOutputStream(new FileOutputStream(this.ruta_guardar + "/Partida_"+ String.valueOf(aux) + ".dat"));
-			archivo.writeObject(this);
+			// Vamos guardando ahora en el archivo las variables que necesitamos
+			archivo.writeObject(this.perm);
+			archivo.writeObject(this.guesses);
+			archivo.writeObject(_b);
+			archivo.writeObject(this.mines);
+			archivo.writeInt(this.n);
+			archivo.writeInt(this.m);
+			archivo.writeInt(this.nomines);
+			archivo.writeInt(this.rem_mines);
+			archivo.writeInt(Integer.valueOf(this.t_time.getText()));
 			archivo.close();
 		} 
 		catch (FileNotFoundException e) 
@@ -664,6 +684,16 @@ public class Buscaminas extends JFrame implements Runnable, ActionListener, Mous
 	public void cargar_partida() throws ClassNotFoundException
 	{
 		
+		int _perm[][] = null;
+	    int _guesses[][] = null;
+	    String _b[][] = null;
+	    int[][] _mines = null;
+	    int _n = 0;
+	    int _m = 0;
+	    int _nomines = 0;
+	    int _remmines = 0;
+	    int _time = 0;
+		
 		JFileChooser fc = new JFileChooser();
 		fc.setCurrentDirectory(new File(ruta_guardar));
 		int selecc = fc.showOpenDialog(null);
@@ -672,10 +702,17 @@ public class Buscaminas extends JFrame implements Runnable, ActionListener, Mous
 		try 
 		{
 			ObjectInputStream archivo = new ObjectInputStream(new FileInputStream(partida));
-			Buscaminas bc = (Buscaminas) archivo.readObject();
+			// Leemos paralelamente las variables que hemos guardado 
+			_perm = (int[][]) archivo.readObject();
+			_guesses = (int[][]) archivo.readObject();
+			_b = (String[][]) archivo.readObject();
+			_mines = (int[][]) archivo.readObject();
+			_n = archivo.readInt();
+			_m = archivo.readInt();
+			_nomines = archivo.readInt();
+			_remmines = archivo.readInt();
+			_time = archivo.readInt();
 			archivo.close();
-			this.dispose();
-			bc.setVisible(true);
 		} 
 		catch (FileNotFoundException e) 
 		{
@@ -685,6 +722,40 @@ public class Buscaminas extends JFrame implements Runnable, ActionListener, Mous
 		{
 			e.printStackTrace();
 		}
+		// Una vez que tenemos las variables, creamos la matriz de botones y lanzamos una nueva instancia
+		this.dispose();
+		Buscaminas bc = new Buscaminas(_nomines,_n,_m);
+		bc.perm = _perm;
+		bc.guesses = _guesses;
+		
+		for (int i = 0; i < _n; i++)
+	    	for (int j = 0; j < _m; j++) {
+	    		bc.b[i][j].setText(_b[i][j]);
+	    		if (_b[i][j].equals(" "))
+	    		{
+	    			bc.b[i][j].setBackground(Color.WHITE);
+	    			bc.b[i][j].setEnabled(false);
+	    		}
+	    		else if(_b[i][j].equals("?"))
+	    		{
+	    			
+	    		}
+	    		else if(_b[i][j].equals("x"))
+	    		{
+	    			bc.b[i][j].setBackground(Color.ORANGE);
+	    		}
+	    		else
+	    		{
+	    			bc.b[i][j].setBackground(Color.WHITE);
+	    			bc.b[i][j].setEnabled(false);
+	    		}
+	    	}
+		
+		bc.mines = _mines;
+		bc.rem_mines = _remmines;
+		bc.t_rem_mines.setText(String.valueOf(_remmines));
+		bc.t_time.setText(String.valueOf(_time));
+		bc.segundos = _time;
 	}
 	
 	public void guardar_estadisticas()
@@ -724,46 +795,28 @@ public class Buscaminas extends JFrame implements Runnable, ActionListener, Mous
            }
         }
 	}
-	/**/
 	
-	/* MÃ³dulo para calcular las estadÃ­sticas por persona buscada*/
-	public int[] estadisticas(String nombre)
+	private String get_texto_est() 
 	{
-		int[] salida = new int[4]; // Devolvemos las minas, filas, columnas y tiempo
+		String linea;
+		String texto = ""; // Inicializamos el texto
 		FileReader fr = null;
 		BufferedReader br;
-		File fichero_padre = new File(this.ruta_estadisticas); // Ruta donde se guardan las estadÃ­sticas de cada partida
-		for (File archivo : fichero_padre.listFiles()) // Recorremos los archivos buscando las partidas que coincidan con el nombre
+		File fichero_padre = new File(this.ruta_estadisticas); // Ruta donde se guardan las estadísticas de cada partida
+		fichero_padre.mkdirs();
+		for (File archivo : fichero_padre.listFiles()) // Recorremos los archivos con las estadisticas
 		{
-			try 
+			try
 			{
-		         fr = new FileReader (archivo);
-		         br = new BufferedReader(fr);
-
-		         boolean iguales = true;
-		         char[] lineach;
-		         char[] nombrech = nombre.toCharArray();
-		         int c = 8;
-		         int c2 = 0;
-		         String linea = br.readLine(); // Leemos solo la primera linea para saber si coincide el nombre
-		         lineach = linea.toCharArray();
-		         if (linea != null)
-		         {
-		        	 // En el caracter 8 empieza el nombre
-		        	 while (iguales && nombre.length() > c2+1)
-		        	 {
-		        		 if (lineach[c] != nombrech[c2])
-		        			 iguales = false;
-		        		 c++;
-		        		 c2++;
-		        	 }
-		        	 
-		        	 if (iguales) // Si el nombre coincide, cogemos las estadisticas
-		        	 {
-		        		 // TO DO
-		        	 }
-		         }     
-		    }
+				fr = new FileReader(archivo);
+				br = new BufferedReader(fr);
+				
+				while ((linea = br.readLine()) != null)
+				{
+					texto += linea + "\n"; // Concatenamos el texto del archivo al texto de salida
+				}
+				texto += "\n--------------------------------------------\n";
+			}
 		    catch(Exception e)
 			{
 		    	e.printStackTrace();
@@ -783,8 +836,70 @@ public class Buscaminas extends JFrame implements Runnable, ActionListener, Mous
 		        }
 		    }
 		}
-		return salida;
+		return texto;
 	}
+
+	/**/
+	
+	/* Módulo para calcular las estadísticas por persona buscada*/
+//	public int[] estadisticas(String nombre)
+//	{
+//		int[] salida = new int[4]; // Devolvemos las minas, filas, columnas y tiempo
+//		FileReader fr = null;
+//		BufferedReader br;
+//		File fichero_padre = new File(this.ruta_estadisticas); // Ruta donde se guardan las estadísticas de cada partida
+//		for (File archivo : fichero_padre.listFiles()) // Recorremos los archivos buscando las partidas que coincidan con el nombre
+//		{
+//			try 
+//			{
+//		         fr = new FileReader (archivo);
+//		         br = new BufferedReader(fr);
+//
+//		         boolean iguales = true;
+//		         char[] lineach;
+//		         char[] nombrech = nombre.toCharArray();
+//		         int c = 8;
+//		         int c2 = 0;
+//		         String linea = br.readLine(); // Leemos solo la primera linea para saber si coincide el nombre
+//		         lineach = linea.toCharArray();
+//		         if (linea != null)
+//		         {
+//		        	 // En el caracter 8 empieza el nombre
+//		        	 while (iguales && nombre.length() > c2+1)
+//		        	 {
+//		        		 if (lineach[c] != nombrech[c2])
+//		        			 iguales = false;
+//		        		 c++;
+//		        		 c2++;
+//		        	 }
+//		        	 
+//		        	 if (iguales) // Si el nombre coincide, cogemos las estadisticas
+//		        	 {
+//		        		 // TO DO
+//		        	 }
+//		         }     
+//		    }
+//		    catch(Exception e)
+//			{
+//		    	e.printStackTrace();
+//			}
+//			finally
+//			{
+//				try
+//				{                    
+//					if( null != fr )
+//					{   
+//						fr.close();     
+//		            }                  
+//		        }
+//				catch (Exception e2)
+//				{ 
+//		            e2.printStackTrace();
+//		        }
+//		    }
+//		}
+//		return salida;
+//	}
 	/**/
 	
 	public void checkifend()
@@ -808,7 +923,7 @@ public class Buscaminas extends JFrame implements Runnable, ActionListener, Mous
             //JOptionPane.showMessageDialog(temporaryLostComponent, "Congratulations you won!!! It took you "+(int)((endtime-starttime)/1000000000)+" seconds!");
             this.detener_crono();
             this.nombre_jugador = JOptionPane.showInputDialog(null,"!Victoria! Ha necesitado: " + (int)((endtime-starttime)/1000000000) + " segundos\n" + "Escriba su nombre");
-            this.seleccionado2 = JOptionPane.showOptionDialog(null, "Â¿Desea guardar las estadÃ­sticas de la partida?","Guardar EstadÃ­sticas",JOptionPane.DEFAULT_OPTION, JOptionPane.QUESTION_MESSAGE,null,opciones2,opciones2[0]);
+            this.seleccionado2 = JOptionPane.showOptionDialog(null, "¿Desea guardar las estadísticas de la partida?","Guardar Estadísticas",JOptionPane.DEFAULT_OPTION, JOptionPane.QUESTION_MESSAGE,null,opciones2,opciones2[0]);
             
             if (seleccionado2 == 0)
             {
@@ -832,7 +947,7 @@ public class Buscaminas extends JFrame implements Runnable, ActionListener, Mous
             {
                 if (b[x+deltax[a]][y+deltay[a]].isEnabled())
                 {
-                	/* Ponemos el botÃ³n en blanco */
+                	/* Ponemos el botón en blanco */
                 	this.b[x+deltax[a]][y+deltay[a]].setBackground(Color.WHITE);
                 	/**/
                     b[x+deltax[a]][y+deltay[a]].setText(" ");
@@ -842,7 +957,7 @@ public class Buscaminas extends JFrame implements Runnable, ActionListener, Mous
             } else if ((perm[x+deltax[a]][y+deltay[a]] != 0) && (mines[x+1+deltax[a]][y+1+deltay[a]] == 0)  && (guesses[x+deltax[a]+1][y+deltay[a]+1] == 0))
             {
                 tmp = new Integer(perm[x+deltax[a]][y+deltay[a]]).toString();
-                /* Ponemos el botÃ³n en blanco */
+                /* Ponemos el botón en blanco */
                 this.b[x+deltax[a]][y+deltay[a]].setBackground(Color.WHITE);
                 /**/
                 b[x+deltax[a]][y+deltay[a]].setText(Integer.toString(perm[x+deltax[a]][y+deltay[a]]));
