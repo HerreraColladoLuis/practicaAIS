@@ -46,9 +46,10 @@ public class Buscaminas extends JFrame implements Runnable, ActionListener, Mous
     private final String ruta_guardar = "Temp/Partidas", ruta_estadisticas = "Temp/Estadisticas";
     private String nombre_jugador;
     private Thread proceso_cronometro; // Hilo para correr el contador de segundos
-    private Boolean crono_activo;
+    private Boolean crono_activo, prin = false, inter = false, exp = false, pers = false; // Booleanos para saber en que modo de juego estamos
     private String[] opciones ={"Empezar de nuevo", "Salir"};
     private String[] opciones2 = {"Sí","No"};
+    private String[] opciones_est = {"Principiante","Intermedio","Experto","Personalizado"};
     /**/ 
     
     int perm[][];
@@ -311,17 +312,6 @@ public class Buscaminas extends JFrame implements Runnable, ActionListener, Mous
     		f_stats.setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
     		this.setEnabled(false);
     		
-    		this.e_est = new JTextArea();
-    		String texto = this.get_texto_est();
-    		e_est.setText(texto);
-    		e_est.setEditable(false);
-    		
-    		JScrollPane scroll = new JScrollPane (e_est, 
-    				   JScrollPane.VERTICAL_SCROLLBAR_ALWAYS, JScrollPane.HORIZONTAL_SCROLLBAR_ALWAYS);
-
-    		f_stats.add(scroll);
-    		f_stats.setVisible(true);
-    		
     		// Añadimos un listener al frame de estadísticas para que cuando se cierre habilitar el frame principal
     		f_stats.addWindowListener(new WindowAdapter()
     				{
@@ -332,6 +322,29 @@ public class Buscaminas extends JFrame implements Runnable, ActionListener, Mous
     						cerrando_ventana();
 						}
     				});
+    		
+    		String rut = this.ruta_estadisticas;
+    		seleccionado = JOptionPane.showOptionDialog(null, "Elige un nivel para ver las estadísticas.","Niveles",JOptionPane.DEFAULT_OPTION,JOptionPane.INFORMATION_MESSAGE,null,opciones_est,opciones_est[0]);
+    		if (seleccionado == 0)
+    			rut += "/Principiante";
+    		else if (seleccionado == 1)
+    			rut += "/Intermedio";
+    		else if (seleccionado == 2)
+    			rut += "/Experto";
+    		else if (seleccionado == 3)
+    			rut += "/Personalizado";
+    		
+    		this.e_est = new JTextArea();
+    		String texto = this.get_texto_est(rut);
+    		e_est.setText(texto);
+    		e_est.setEditable(false);
+    		
+    		JScrollPane scroll = new JScrollPane (e_est, 
+    				   JScrollPane.VERTICAL_SCROLLBAR_ALWAYS, JScrollPane.HORIZONTAL_SCROLLBAR_ALWAYS);
+
+    		f_stats.add(scroll);
+    		f_stats.setVisible(true);
+    			
     	}
     	else if (e.getSource() == m_opc)
     	{
@@ -601,7 +614,8 @@ public class Buscaminas extends JFrame implements Runnable, ActionListener, Mous
 		this.dispose();
 		try 
 		{
-			new Buscaminas(Integer.parseInt(this.t_minas.getText()),Integer.parseInt(this.t_filas.getText()),Integer.parseInt(this.t_columnas.getText()));
+			Buscaminas bc = new Buscaminas(Integer.parseInt(this.t_minas.getText()),Integer.parseInt(this.t_filas.getText()),Integer.parseInt(this.t_columnas.getText()));
+			bc.pers = true; 
 		} catch (Exception e)
 		{
 			
@@ -625,17 +639,20 @@ public class Buscaminas extends JFrame implements Runnable, ActionListener, Mous
 
 	protected void setup_experto() {
 		this.dispose();
-		new Buscaminas(99,32,16);
+		Buscaminas bc = new Buscaminas(99,32,16);
+		bc.exp = true;
 	}
 
 	protected void setup_intermedio() {
 		this.dispose();
-		new Buscaminas(40,16,16);
+		Buscaminas bc = new Buscaminas(40,16,16);
+		bc.inter = true;
 	}
 
 	protected void setup_principiante() {
 		this.dispose();
-		new Buscaminas(10,10,10);
+		Buscaminas bc = new Buscaminas(10,10,10);
+		bc.prin = true;
 	}
 	/**/
 	
@@ -758,14 +775,39 @@ public class Buscaminas extends JFrame implements Runnable, ActionListener, Mous
 		bc.segundos = _time;
 	}
 	
-	public void guardar_estadisticas()
+	public int guardar_estadisticas()
 	{
 		aux = 1;
-		File fichero_padre = new File(this.ruta_estadisticas);
+		String ruta = this.ruta_estadisticas;
+		
+		if (this.prin)
+			ruta += "/Principiante";
+		else if (this.inter)
+			ruta += "/Intermedio";
+		else if (this.exp) 
+			ruta += "/Experto";
+		else if (this.pers)
+			ruta += "/Personalizado";
+		
+		File fichero_padre = new File(ruta);
 		fichero_padre.mkdirs();
 		for (File archivo : fichero_padre.listFiles()) // Comprobamos cuantas partidas hay guardadas
 			aux++;
 		
+		if (aux == 11) // Si ya hay 10 partidas guardadas tenemos que comprobar si el tiempo de esta es mejor que el peor tiempo
+		{
+			if ((int)((endtime-starttime)/1000000000) < devolver_peor(ruta)) // Si es mejor que el peor
+			{
+				aux = eliminar_peor(ruta); // Eliminamos el peor tiempo
+			}	 
+			else // Si no es mejor que el peor, no guardamos el tiempo
+			{
+				return 0;
+			}
+		}
+		else
+			aux = devolver_ultimo(ruta) + 1;
+				
 		FileWriter fichero = null;
         PrintWriter pw = null;
         try
@@ -773,17 +815,16 @@ public class Buscaminas extends JFrame implements Runnable, ActionListener, Mous
         	Date date = new Date();
         	DateFormat hourdateFormat = new SimpleDateFormat("HH:mm:ss dd/MM/yyyy");
         	
-            fichero = new FileWriter(this.ruta_estadisticas + "/Partida_" + String.valueOf(aux) + ".txt");
+            fichero = new FileWriter(ruta + "/Partida_" + String.valueOf(aux) + ".txt");
             pw = new PrintWriter(fichero);
             
             pw.println("Nombre: " + this.nombre_jugador);
             pw.println("Fecha: " + hourdateFormat.format(date));
             pw.println();
-            pw.println("Tiempo: " + String.valueOf((int)((endtime-starttime)/1000000000)) + " segundos");
+            pw.println("Tiempo: " + String.valueOf((int)((endtime-starttime)/1000000000)));
             pw.println("Minas: " + String.valueOf(this.nomines));
             pw.println("Filas: " + String.valueOf(this.n));
-            pw.println("Columnas: " + String.valueOf(this.m));
-            
+            pw.println("Columnas: " + String.valueOf(this.m));     
         } catch (Exception e) {
             e.printStackTrace();
         } finally {
@@ -794,15 +835,252 @@ public class Buscaminas extends JFrame implements Runnable, ActionListener, Mous
               e2.printStackTrace();
            }
         }
+        return 1;
 	}
 	
-	private String get_texto_est() 
+	private int devolver_ultimo(String ruta) 
+	{
+		int mayor = 0, actual; // Numero mayor para comparar
+		FileReader fr = null;
+		BufferedReader br;
+		String nombre;
+		char[] nombrech;
+		File fichero_padre = new File(ruta); // Ruta donde se guardan las estadísticas de cada partida
+		fichero_padre.mkdirs();
+		for (File archivo : fichero_padre.listFiles()) // Recorremos los archivos con las estadisticas
+		{
+			try
+			{
+				fr = new FileReader(archivo);
+				br = new BufferedReader(fr);
+				
+				nombre = archivo.getName();
+				nombrech = nombre.toCharArray();
+				nombre = ""; // Utilizamos nombre para introducir el numero de partida
+				if (nombrech.length == 13) // Tiene una cifra en el numero de partida
+				{
+					nombre += nombrech[8];
+					actual = Integer.valueOf(nombre);
+					if (actual > mayor)
+						mayor = actual;
+				}
+				else if (nombrech.length == 14) // Tiene una cifra en el numero de partida
+				{
+					nombre += nombrech[8];
+					nombre += nombrech[9];
+					actual = Integer.valueOf(nombre);
+					if (actual > mayor)
+						mayor = actual;
+				}
+			}
+		    catch(Exception e)
+			{
+		    	e.printStackTrace();
+			}
+			finally
+			{
+				try
+				{                    
+					if( null != fr )
+					{   
+						fr.close();     
+		            }                  
+		        }
+				catch (Exception e2)
+				{ 
+		            e2.printStackTrace();
+		        }
+		    }
+		}
+		return mayor;
+	}
+
+	private int eliminar_peor(String ruta) 
+	{
+		int actual, peor = 0; // Peor tiempo para comparar
+		int a;
+		FileReader fr = null;
+		BufferedReader br;
+		String linea, time, nombre;
+		char[] lineach, nombrech;
+		File fichero_padre = new File(ruta); // Ruta donde se guardan las estadísticas de cada partida
+		File fichero_a_borrar = null; // Fichero con peor tiempo que borraremos
+		fichero_padre.mkdirs();
+		for (File archivo : fichero_padre.listFiles()) // Recorremos los archivos con las estadisticas
+		{
+			time = ""; // Inicializamos el string time
+			a = 0;
+			try
+			{
+				fr = new FileReader(archivo);
+				br = new BufferedReader(fr);
+				
+				// Nos ponemos en la linea del tiempo
+				do
+				{
+					br.readLine();
+					a++;
+				} while (a != 3);
+				
+				linea = br.readLine();
+				lineach = linea.toCharArray(); // Pasamos el string a char array para leer el tiempo
+				if (lineach.length == 9) // Comprobamos si el tiempo tiene una cifra
+				{
+					time += lineach[8];
+					actual = Integer.valueOf(time);
+					if (actual > peor) // Si el tiempo actual es mayor que el peor
+					{
+						peor = actual; // Actualizamos el peor tiempo con el actual
+						fichero_a_borrar = new File(archivo.getAbsolutePath());
+					}	
+				}
+				else if (lineach.length == 10) // Dos cifras
+				{
+					time += lineach[8];
+					time += lineach[9];
+					actual = Integer.valueOf(time);
+					if (actual > peor) // Si el tiempo actual es mayor que el peor
+					{
+						peor = actual; // Actualizamos el peor tiempo con el actual
+						fichero_a_borrar = new File(archivo.getAbsolutePath());
+					}
+						
+				}
+				else if (lineach.length == 11) // Tres cifras
+				{
+					time += lineach[8];
+					time += lineach[9];
+					time += lineach[10];
+					actual = Integer.valueOf(time);
+					if (actual > peor) // Si el tiempo actual es mayor que el peor
+					{
+						peor = actual; // Actualizamos el peor tiempo con el actual
+						fichero_a_borrar = new File(archivo.getAbsolutePath());
+					}
+				}
+			}
+		    catch(Exception e)
+			{
+		    	e.printStackTrace();
+			}
+			finally
+			{
+				try
+				{                    
+					if( null != fr )
+					{   
+						fr.close();     
+		            }                  
+		        }
+				catch (Exception e2)
+				{ 
+		            e2.printStackTrace();
+		        }
+		    }
+		}
+		nombre = fichero_a_borrar.getName();
+		nombrech = nombre.toCharArray();
+		nombre = ""; // Utilizamos nombre para introducir el numero de partida
+		fichero_a_borrar.delete(); // Borramos ese fichero
+		if (nombrech.length == 13) // Tiene una cifra en el numero de partida
+		{
+			nombre += nombrech[8];
+			return Integer.valueOf(nombre);
+		}
+		else if (nombrech.length == 14) // Tiene una cifra en el numero de partida
+		{
+			nombre += nombrech[8];
+			nombre += nombrech[9];
+			return Integer.valueOf(nombre);
+		}
+		else
+			return 0;
+	}
+
+	private int devolver_peor(String ruta) 
+	{
+		int actual, peor = 0; // Peor tiempo para comparar
+		int a;
+		FileReader fr = null;
+		BufferedReader br;
+		String linea, time;
+		char[] lineach;
+		File fichero_padre = new File(ruta); // Ruta donde se guardan las estadísticas de cada partida
+		fichero_padre.mkdirs();
+		for (File archivo : fichero_padre.listFiles()) // Recorremos los archivos con las estadisticas
+		{
+			a = 0;
+			time = ""; // Inicializamos el string time
+			try
+			{
+				fr = new FileReader(archivo);
+				br = new BufferedReader(fr);
+				
+				// Nos ponemos en la linea del tiempo
+				do
+				{
+					br.readLine();
+					a++;
+				} while (a != 3);
+				
+				linea = br.readLine();
+				lineach = linea.toCharArray(); // Pasamos el string a char array para leer el tiempo
+				if (lineach.length == 9) // Comprobamos si el tiempo tiene una cifra
+				{
+					time += lineach[8];
+					actual = Integer.valueOf(time);
+					if (actual > peor) // Si el tiempo actual es mayor que el peor
+						peor = actual; // Actualizamos el peor tiempo con el actual
+				}
+				else if (lineach.length == 10) // Dos cifras
+				{
+					time += lineach[8];
+					time += lineach[9];
+					actual = Integer.valueOf(time);
+					if (actual > peor) // Si el tiempo actual es mayor que el peor
+						peor = actual; // Actualizamos el peor tiempo con el actual
+				}
+				else if (lineach.length == 11) // Tres cifras
+				{
+					time += lineach[8];
+					time += lineach[9];
+					time += lineach[10];
+					actual = Integer.valueOf(time);
+					if (actual > peor) // Si el tiempo actual es mayor que el peor
+						peor = actual; // Actualizamos el peor tiempo con el actual
+				}
+			}
+		    catch(Exception e)
+			{
+		    	e.printStackTrace();
+			}
+			finally
+			{
+				try
+				{                    
+					if( null != fr )
+					{   
+						fr.close();     
+		            }                  
+		        }
+				catch (Exception e2)
+				{ 
+		            e2.printStackTrace();
+		        }
+		    }
+		}
+		return peor;	
+	}
+
+	private String get_texto_est(String r) 
 	{
 		String linea;
 		String texto = ""; // Inicializamos el texto
+		String ruta = r;
 		FileReader fr = null;
 		BufferedReader br;
-		File fichero_padre = new File(this.ruta_estadisticas); // Ruta donde se guardan las estadísticas de cada partida
+		
+		File fichero_padre = new File(ruta); // Ruta donde se guardan las estadísticas de cada partida
 		fichero_padre.mkdirs();
 		for (File archivo : fichero_padre.listFiles()) // Recorremos los archivos con las estadisticas
 		{
@@ -839,67 +1117,6 @@ public class Buscaminas extends JFrame implements Runnable, ActionListener, Mous
 		return texto;
 	}
 
-	/**/
-	
-	/* Módulo para calcular las estadísticas por persona buscada*/
-//	public int[] estadisticas(String nombre)
-//	{
-//		int[] salida = new int[4]; // Devolvemos las minas, filas, columnas y tiempo
-//		FileReader fr = null;
-//		BufferedReader br;
-//		File fichero_padre = new File(this.ruta_estadisticas); // Ruta donde se guardan las estadísticas de cada partida
-//		for (File archivo : fichero_padre.listFiles()) // Recorremos los archivos buscando las partidas que coincidan con el nombre
-//		{
-//			try 
-//			{
-//		         fr = new FileReader (archivo);
-//		         br = new BufferedReader(fr);
-//
-//		         boolean iguales = true;
-//		         char[] lineach;
-//		         char[] nombrech = nombre.toCharArray();
-//		         int c = 8;
-//		         int c2 = 0;
-//		         String linea = br.readLine(); // Leemos solo la primera linea para saber si coincide el nombre
-//		         lineach = linea.toCharArray();
-//		         if (linea != null)
-//		         {
-//		        	 // En el caracter 8 empieza el nombre
-//		        	 while (iguales && nombre.length() > c2+1)
-//		        	 {
-//		        		 if (lineach[c] != nombrech[c2])
-//		        			 iguales = false;
-//		        		 c++;
-//		        		 c2++;
-//		        	 }
-//		        	 
-//		        	 if (iguales) // Si el nombre coincide, cogemos las estadisticas
-//		        	 {
-//		        		 // TO DO
-//		        	 }
-//		         }     
-//		    }
-//		    catch(Exception e)
-//			{
-//		    	e.printStackTrace();
-//			}
-//			finally
-//			{
-//				try
-//				{                    
-//					if( null != fr )
-//					{   
-//						fr.close();     
-//		            }                  
-//		        }
-//				catch (Exception e2)
-//				{ 
-//		            e2.printStackTrace();
-//		        }
-//		    }
-//		}
-//		return salida;
-//	}
 	/**/
 	
 	public void checkifend()
